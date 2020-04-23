@@ -22,6 +22,7 @@ from _dms_tiler import tiler
 from _dms_tee import tee
 from _dms_osd import osd
 from _dms_sink import sink
+from _dms_main_loop import main_loop
         
 class Root(object):
 
@@ -37,17 +38,19 @@ class Root(object):
         self.tee = tee()
         self.osd = osd()
         self.sink = sink()
+        self.main_loop = main_loop()
         
     @cherrypy.expose
     @cherrypy.tools.json_out()
     def version(self):
-
         try:
             retval = dsl_version_get()
             result = { "service": "dsl_version_get", "result": retval }
         except:
             result = { "service": "dsl_version_get", "result": { "exception" : formatEx() } }
         return result
+        
+        
 
 root = Root()
 

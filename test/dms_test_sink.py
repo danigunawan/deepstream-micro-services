@@ -3,6 +3,10 @@
 # Copyright (c) 2020, Robert Howell. All rights reserved.
 #
 ################################################################################
+#!/usr/bin/env python
+
+import sys
+sys.path.insert(0, '../')
 from dms_client import *
 
 # update host URL to 

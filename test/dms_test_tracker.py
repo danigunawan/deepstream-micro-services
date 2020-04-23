@@ -3,9 +3,13 @@
 # Copyright (c) 2020, Robert Howell. All rights reserved.
 #
 ################################################################################
+#!/usr/bin/env python
+
+import sys
+sys.path.insert(0, '../')
 from dms_client import *
 
-tracker_config_file = '../test/configs/iou_config.txt'
+tracker_config_file = './test/configs/iou_config.txt'
 
 def main(args):
 

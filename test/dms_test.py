@@ -1,14 +1,22 @@
+#!/usr/bin/env python
+
+import sys
+sys.path.insert(0, '../')
 
 from dms_client import *
+
+# update host URL to 
+host_uri = 'rjhowell44-desktop.local'
 
 uri_file = "../test/streams/sample_1080p_h264.mp4"
 
 # Filespecs for the Primary GIE
-primary_infer_config_file = '../test/configs/config_infer_primary_nano.txt'
-primary_model_engine_file = '../test/models/Primary_Detector_Nano/resnet10.caffemodel_b1_fp16.engine'
+primary_infer_config_file = './test/configs/config_infer_primary_nano.txt'
+primary_model_engine_file = './test/models/Primary_Detector_Nano/resnet10.caffemodel_b1_fp16.engine'
 
 def main(args):
 
+    dms_main_loop_quit()
     dms_pipeline_delete_all()
     dms_component_delete_all()
 
@@ -39,7 +47,7 @@ def main(args):
         if retval != 'DSL_RESULT_SUCCESS':
             break
 
-        retval = dms_sink_overlay_new('overlay-sink', 1, 0, 0, 0, 0, 1280, 720)
+        retVal = dms_sink_rtsp_new('rtsp-sink', host_uri, 5400, 8554, DMS_CODEC_H264, 4000000, 0)
         if retval != 'DSL_RESULT_SUCCESS':
             break
 
@@ -56,12 +64,17 @@ def main(args):
             break
         
         retval = dms_pipeline_component_add_many('pipeline', 
-            ['uri-source', 'primary-gie', 'tracker', 'tiler', 'on-screen-display', 'overlay-sink', 'window-sink', None])
+            ['csi-source', 'primary-gie', 'tracker', 'tiler', 'on-screen-display', 'rtsp-sink', 'window-sink', None])
         if retval != 'DSL_RESULT_SUCCESS':
             break
 
         retval = dms_pipeline_play('pipeline')
+        if retval != 'DSL_RESULT_SUCCESS':
+            break
+
+        retval = dms_main_loop_run()
         break
+
 
     # Print out the final result
     print(retval)

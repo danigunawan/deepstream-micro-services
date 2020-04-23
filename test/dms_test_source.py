@@ -3,11 +3,15 @@
 # Copyright (c) 2020, Robert Howell. All rights reserved.
 #
 ################################################################################
+#!/usr/bin/env python
+
+import sys
+sys.path.insert(0, '../')
 
 from dms_client import *
 
-uri_file_h264 = "../test/streams/sample_1080p_h264.mp4"
-uri_file_h265 = "../test/streams/sample_1080p_h265.mp4"
+uri_file_h264 = "./test/streams/sample_1080p_h264.mp4"
+uri_file_h265 = "./test/streams/sample_1080p_h265.mp4"
 
 # RTSP Source URI
 rtsp_uri = 'rtsp://raspberrypi.local:8554/'

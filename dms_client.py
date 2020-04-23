@@ -751,3 +751,23 @@ def dms_component_delete_all():
         logger.error(sys.exc_info()[0])
         return sys.exc_info()[0]
 
+##
+## dms_main_loop_run
+##
+def dms_main_loop_run():
+    try:
+        response = requests.post(_uri_('main_loop/run'), json={})
+        logger.info(response.text)
+        return response.json()['result']
+    except:
+        logger.error(sys.exc_info()[0])
+        return sys.exc_info()[0]
+
+##
+## dms_main_loop_quit
+##
+def dms_main_loop_quit():
+    try:
+        requests.post(_uri_('main_loop/quit'), json={})
+    except:
+        logger.error(sys.exc_info()[0])
