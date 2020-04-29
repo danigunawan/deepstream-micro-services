@@ -1,7 +1,7 @@
 ################################################################################
 # The MIT License
 #
-# Copyright (c) 2020, Robert Howell. All rights reserved.
+# Copyright (c) 2019-2020, Robert Howell. All rights reserved.
 #
 # Permission is hereby granted, free of charge, to any person obtaining a
 # copy of this software and associated documentation files (the "Software"),
@@ -25,73 +25,99 @@
 
 import sys
 sys.path.insert(0, '../')
-
 from dms_client import *
-
-uri_file_h264 = "./test/streams/sample_1080p_h264.mp4"
-uri_file_h265 = "./test/streams/sample_1080p_h265.mp4"
-
-# RTSP Source URI
-rtsp_uri = 'rtsp://raspberrypi.local:8554/'
 
 def main(args):
 
     retval = dms_target_new('nano1', 'http://127.0.0.1:8080')
+
     if retval == 'DSL_RESULT_SUCCESS':
-    
         while True:
-            print(dms_target_version_get('nano1'))
 
             # Ensure that we're starting with empty containers
             dms_pipeline_delete_all('nano1')
             dms_component_delete_all('nano1')
 
+            retval = dms_pipeline_new('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+                
+            retval, state = dms_pipeline_state_get('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
             retval = dms_source_csi_new('nano1', 'csi-source', 1280, 720, 30, 1)
             if retval != 'DSL_RESULT_SUCCESS':
                 break
 
-            retval = dms_source_usb_new('nano1', 'usb-source', 1280, 720, 30, 1)
+            retval = dms_tiler_new('nano1', 'tiler', 1280, 720)
             if retval != 'DSL_RESULT_SUCCESS':
                 break
-
-            retval = dms_source_uri_new('nano1', 'uri-source', uri_file_h264, False, 0, 0, 0)
-            if retval != 'DSL_RESULT_SUCCESS':
-                break
-
-            retval = dms_source_rtsp_new('nano1', 'rtsp-source', rtsp_uri, DMS_RTP_ALL, DMS_CUDADEC_MEMTYPE_DEVICE, False, 1)
-            if retval != 'DSL_RESULT_SUCCESS':
-                break
-                
-            retval, width, height = dms_source_dimensions_get('nano1', 'csi-source')
-            if retval != 'DSL_RESULT_SUCCESS':
-                break
-
-            retval, fps_n, fps_d = dms_source_frame_rate_get('nano1', 'csi-source')
-            if retval != 'DSL_RESULT_SUCCESS':
-                break
-
-            retval, uri = dms_source_decode_uri_get('nano1', 'uri-source')
-            if retval != 'DSL_RESULT_SUCCESS':
-                break
-
-    #        retval = dms_source_decode_uri_set('uri-source', uri_file_h265)
-            if retval != 'DSL_RESULT_SUCCESS':
-                break
-
-            retval, uri = dms_source_decode_uri_get('nano1', 'uri-source')
-            if retval != 'DSL_RESULT_SUCCESS':
-                break
-
-            num = dms_source_num_in_use_get('nano1')
-            num = dms_source_num_in_use_max_get('nano1')
             
-            success = dms_source_num_in_use_max_set('nano1', 6)
+            retval = dms_sink_fake_new('nano1', 'fake-sink')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
             
+            retval = dms_pipeline_component_add('nano1', 'pipeline', 'csi-source')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+            
+            retval = dms_pipeline_component_add_many('nano1', 'pipeline', 
+                ['tiler', 'fake-sink', None])
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval = dms_pipeline_streammux_dimensions_set('nano1', 'pipeline', 1280, 720)
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval, width, height = dms_pipeline_streammux_dimensions_get('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval = dms_pipeline_streammux_batch_properties_set('nano1', 'pipeline', 2, 50000)
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval, batch_size, batch_timeout = dms_pipeline_streammux_batch_properties_get('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval = dms_pipeline_play('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval, state = dms_pipeline_state_get('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval, is_live = dms_pipeline_is_live('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval = dms_pipeline_streammux_padding_set('nano1', 'pipeline', True)
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval, enabled = dms_pipeline_streammux_padding_get('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            #retval = dms_pipeline_pause('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
+            retval = dms_pipeline_stop('nano1', 'pipeline')
+            if retval != 'DSL_RESULT_SUCCESS':
+                break
+
             # done - break out of while
             break
 
-        # Delete all components created
+        # Delete the pipeline and all components created
+        dms_pipeline_delete_all('nano1')
         dms_component_delete_all('nano1')
+
 
     # Print out the final result
     print(retval)
